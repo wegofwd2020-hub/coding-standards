@@ -149,3 +149,33 @@ Application code lives in its own repo. Cross-reference with links.
 When modifying structs, function signatures, or service methods, check whether the
 change is reflected in documentation. CI should validate that key identifiers
 mentioned in docs still exist in code.
+
+---
+
+## 17. Standard Architecture Diagrams
+
+Every project with 2+ services or significant backend complexity must maintain
+these 11 architecture diagrams in the docs repo under `docs/architecture/`:
+
+| # | Diagram | What It Shows | Audience |
+|---|---|---|---|
+| 1 | **System Design** | High-level services, databases, message brokers, gateways | Everyone |
+| 2 | **Package/Component** | Shared packages/modules, usage matrix, interceptor/middleware chain | Developers |
+| 3 | **Service Dependencies** | Sync (gRPC/HTTP) and async (events) calls between services with SLAs | Developers, SRE |
+| 4 | **Deployment** | K8s namespaces, pods, replicas, HPA, resources, PVCs, env progression | DevOps, SRE |
+| 5 | **Network & Security** | Security zones, TLS termination, network policies, RBAC layers, SOC-2 mapping | Security, Compliance |
+| 6 | **Database ER** | All tables, foreign keys, tenant isolation, design decisions | Developers, DBA |
+| 7 | **Sequence Diagrams** | Key business flows end-to-end (3-5 critical paths) | Developers, Product |
+| 8 | **Logical/Domain (DDD)** | Bounded contexts, aggregates, context map, domain events | Architects, Developers |
+| 9 | **CI/CD Pipeline** | Build stages, quality gates, deployment strategy, rollback | DevOps, Developers |
+| 10 | **Event Schemas** | Event catalogue, envelope format, delivery guarantees, DLQ | Developers, SRE |
+| 11 | **API/Proto Index** | Endpoint inventory, RPC counts, proto-to-service mapping | Developers, API consumers |
+
+**When to create:** Diagrams 1-3 at project inception. Diagrams 4-6 before first
+deployment. Diagrams 7-11 before first production release.
+
+**When to update:** Any diagram affected by a code change must be updated in the
+same PR. Use the documentation drift check (Rule #16) to enforce this.
+
+**Format:** ASCII art in markdown (no external diagram tools required). This ensures
+diagrams are version-controlled, diffable, and renderable without plugins.
