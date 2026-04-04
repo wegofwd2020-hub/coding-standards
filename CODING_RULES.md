@@ -179,3 +179,44 @@ same PR. Use the documentation drift check (Rule #16) to enforce this.
 
 **Format:** ASCII art in markdown (no external diagram tools required). This ensures
 diagrams are version-controlled, diffable, and renderable without plugins.
+
+---
+
+## 18. Typography & Accessibility Standards
+
+Every project with a web frontend must implement this 3-font typography system
+plus dyslexia-friendly accessibility mode.
+
+### Font Stack (all SIL Open Font License — free, no restrictions)
+
+| Usage | Font | CSS Variable | Apply To |
+|---|---|---|---|
+| **Headings & labels** | Inter (sans-serif) | `--font-heading` | h1-h6, labels, buttons, nav, sidebar |
+| **Body text & messages** | Merriweather (serif) | `--font-body` | Paragraphs, descriptions, tooltips, form inputs |
+| **Numbers & codes** | JetBrains Mono (monospace) | `--font-mono` | Amounts, dates, IDs, account codes, table numbers |
+
+### Rules
+
+- **Never hardcode font families in components.** All fonts flow through CSS variables.
+- **Monetary values use `font-mono` with `tabular-nums`** for decimal alignment.
+- **Self-host fonts** via `next/font` or `@fontsource` — no external CDN calls.
+- **Form labels use heading font**, form input text uses body font.
+- **Table headers use heading font**, numeric cells use mono font.
+
+### Dyslexia Accessibility Mode
+
+Every project must support an **OpenDyslexic** toggle (SIL OFL, free):
+
+- When enabled, all 3 font families switch to OpenDyslexic / OpenDyslexic Mono.
+- Increase letter-spacing (+0.05em), line-height (1.8), word-spacing (+0.1em).
+- Persisted in user preferences (localStorage + API backup).
+- Accessible from: Settings page + topbar accessibility menu + keyboard shortcut.
+
+### Per-Vertical Icon Sets
+
+Projects using the vertical plugin pattern must group icons by project type:
+
+- Each vertical gets its own curated icon subset (8-12 industry-relevant icons).
+- Shared icons (dashboard, wallet, settings, etc.) are common across all verticals.
+- Icon names stored in the vertical theme config, resolved to components at runtime.
+- Use a single icon library (lucide-react preferred) — no mixing icon libraries.
