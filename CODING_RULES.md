@@ -4,7 +4,7 @@
 > These are loaded into Claude Code via `~/.claude/CLAUDE.md` and apply
 > automatically regardless of which project you're working in.
 >
-> Last updated: 2026-04-04
+> Last updated: 2026-04-10
 
 ---
 
@@ -22,11 +22,54 @@ API responses serialize money as **strings** (`"150000.00"`).
 
 ---
 
-## 2. Secrets From Environment Only
+## 2. Secrets — Tiered by Classification
 
-All secrets come from environment variables. No hardcoded defaults. Fail fast at
-startup if a required secret is missing. Never log secrets, tokens, passwords, or
-API keys.
+Not all secrets are equal. The source mechanism depends on data classification tier.
+No hardcoded defaults. Fail fast at startup if a required secret is missing.
+**Never log secrets, tokens, passwords, or API keys.**
+
+| Tier | Examples | Source |
+|---|---|---|
+| **T1** | JWT signing keys, DB master passwords, API master keys | HashiCorp Vault (KV v2) via `pkg/secrets.VaultSource` |
+| **T2** | Third-party API keys (SendGrid, Twilio, FCM) | Vault KV v2 or Kubernetes Secret → env var |
+| **T3** | Service endpoints, ports, feature flags | Environment variable (`os.Getenv`) |
+| **T4** | Log level, timeout values, non-sensitive config | Environment variable or config map |
+
+### T1 secrets — always from Vault, never from env vars
+
+T1 secrets must **not** appear in environment variables. Env vars are visible in
+`/proc/<pid>/environ`, `docker inspect` output, container orchestrator audit logs,
+and shell history. JWT signing keys exposed this way allow token forgery.
+
+**Correct production pattern:**
+```go
+// AppRole credentials are T3 — acceptable as env vars.
+vault := secrets.NewVaultSource(secrets.VaultConfig{
+    Address:  os.Getenv("VAULT_ADDR"),
+    RoleID:   os.Getenv("VAULT_ROLE_ID"),
+    SecretID: os.Getenv("VAULT_SECRET_ID"),
+})
+// T1 secret fetched from Vault, held in memory, never re-serialised.
+jwtKey, err := vault.GetSecret(ctx, "iam/jwt-private-key")
+```
+
+**Correct local dev pattern:**
+```
+# Env var carries only a FILE PATH (not the secret):
+IAM_KEY_DIR=./keys
+```
+```go
+src := secrets.NewFileSource(os.Getenv("IAM_KEY_DIR"))
+jwtKey, err := src.GetSecret(ctx, "jwt_private.pem")  // file is gitignored
+```
+
+### Startup check
+
+Services that depend on T1 secrets must register a `/readyz` health check that
+verifies Vault connectivity before serving traffic. See `pkg/secrets.VaultSource`
+which implements `observability.HealthChecker`.
+
+Go implementation: `pkg/secrets` — `VaultSource` (production) and `FileSource` (dev).
 
 ---
 
