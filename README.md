@@ -7,7 +7,7 @@ global `~/.claude/CLAUDE.md` configuration.
 
 | File | Scope | Content |
 |---|---|---|
-| `CODING_RULES.md` | All projects | 16 universal rules (money, caching, idempotency, testing, etc.) |
+| `CODING_RULES.md` | All projects | 19 universal rules (money, caching, idempotency, testing, US English, etc.) |
 | `go-conventions.md` | Go projects | Service structure, error handling, decimal types, testing patterns |
 | `python-conventions.md` | Python projects | FastAPI patterns, Pydantic, structlog, Celery, pytest |
 | `setup.sh` | One-time setup | Links this repo to `~/.claude/` for automatic loading |

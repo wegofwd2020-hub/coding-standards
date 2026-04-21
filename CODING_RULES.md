@@ -4,7 +4,7 @@
 > These are loaded into Claude Code via `~/.claude/CLAUDE.md` and apply
 > automatically regardless of which project you're working in.
 >
-> Last updated: 2026-04-10
+> Last updated: 2026-04-21
 
 ---
 
@@ -190,8 +190,12 @@ Application code lives in its own repo. Cross-reference with links.
 ## 16. Guard Against Documentation Drift
 
 When modifying structs, function signatures, or service methods, check whether the
-change is reflected in documentation. CI should validate that key identifiers
-mentioned in docs still exist in code.
+change is reflected in documentation. CI validates that exported identifiers
+referenced inside ` ```go ` blocks in the docs repo still exist in the application
+source — enforced by `tools/check-doc-drift` on every PR in both repos.
+
+To mark a code block as intentional pseudocode (exempt from the check), place
+`<!-- drift:ignore -->` on the line immediately before the opening fence.
 
 ---
 
@@ -268,3 +272,60 @@ Projects using the vertical plugin pattern must group icons by project type:
 - Shared icons (dashboard, wallet, settings, etc.) are common across all verticals.
 - Icon names stored in the vertical theme config, resolved to components at runtime.
 - Use a single icon library (lucide-react preferred) — no mixing icon libraries.
+
+---
+
+## 19. US English Everywhere
+
+All text the team writes defaults to **US English** spelling. This
+applies uniformly to code identifiers we create, comments, commit
+messages, documentation, log and error messages, and user-facing UI
+copy.
+
+**Common examples:**
+
+| Use | Not |
+|---|---|
+| `color` | `colour` |
+| `initialize` | `initialise` |
+| `organization` | `organisation` |
+| `behavior` | `behaviour` |
+| `authorize`, `authorization` | `authorise`, `authorisation` |
+| `analyze`, `analyzer` | `analyse`, `analyser` |
+| `license` (noun and verb) | `licence` |
+| `catalog` | `catalogue` |
+| `industrialized` | `industrialised` |
+
+### Exceptions — do not "fix" these
+
+These are the cases that would otherwise produce false positives on
+variable or field names, and are explicitly out of scope:
+
+- **Third-party identifiers.** Library names, package imports, API
+  response fields, framework-mandated names. If an upstream SDK
+  exposes `authoriseRequest`, our code keeps `authoriseRequest`.
+- **Shipped identifiers.** Existing DB columns, protobuf field names,
+  public API fields, event-schema keys. Renaming is a breaking
+  change — leave them as-is; apply US English only to *new*
+  additions alongside.
+- **Proper nouns.** Company names, person names, product names, place
+  names. "Harbour Brewing Co." stays.
+- **Direct quotes.** Quoted speech, quoted regulation, quoted
+  customer or partner copy preserves the source spelling.
+- **Localized content.** Tamil script, translation bundles,
+  locale-specific message files (`messages_en_GB.properties` etc.).
+
+### Why US English
+
+Picking one dictionary removes mixed-spelling churn (e.g. `color` and
+`colour` in the same file), makes `grep` predictable, and gives docs
+a single voice. US English matches the dialect of most frameworks,
+open-source tooling, and cloud-provider documentation we depend on —
+less friction at every integration boundary.
+
+### Enforcement
+
+Convention-only for now — caught in code review. If drift recurs,
+add a CI spellchecker (`cspell` for code, `markdownlint` /
+`aspell` for docs) with a project-local exceptions dictionary for
+the unavoidable third-party terms.
