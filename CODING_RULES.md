@@ -177,8 +177,13 @@ deployment. Diagrams 7-11 before first production release.
 **When to update:** Any diagram affected by a code change must be updated in the
 same PR. Use the documentation drift check (Rule #16) to enforce this.
 
-**Format:** ASCII art in markdown (no external diagram tools required). This ensures
-diagrams are version-controlled, diffable, and renderable without plugins.
+**Format:** Mermaid in Markdown code fences is the default — GitHub renders it
+natively, it stays text-diffable, and no plugins are required. ASCII art remains
+permitted for simple box-and-line diagrams where Mermaid adds no clarity.
+System-level diagrams (context / container / component) should follow the C4
+model structure as a recommendation. See
+[`thittam_docs` ADR-017](https://github.com/wegofwd2020-hub/thittam_docs/blob/main/docs/adr/ADR-017-mermaid-architecture-diagrams.md)
+for rationale.
 
 ---
 
