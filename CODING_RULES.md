@@ -202,7 +202,10 @@ To mark a code block as intentional pseudocode (exempt from the check), place
 ## 17. Standard Architecture Diagrams
 
 Every project with 2+ services or significant backend complexity must maintain
-these 11 architecture diagrams in the docs repo under `docs/architecture/`:
+these 11 architecture diagrams in the docs repo. The canonical location is
+`docs/architecture/`, though a project may nest it under an audience-scoped
+path (e.g., Thittam uses `docs/developers/architecture/`); the set of
+diagrams and the discipline are what matters, not the exact parent path.
 
 | # | Diagram | What It Shows | Audience |
 |---|---|---|---|
@@ -229,7 +232,7 @@ natively, it stays text-diffable, and no plugins are required. ASCII art remains
 permitted for simple box-and-line diagrams where Mermaid adds no clarity.
 System-level diagrams (context / container / component) should follow the C4
 model structure as a recommendation. See
-[`thittam_docs` ADR-017](https://github.com/wegofwd2020-hub/thittam_docs/blob/main/docs/adr/ADR-017-mermaid-architecture-diagrams.md)
+[`thittam_docs` ADR-017](https://github.com/wegofwd2020-hub/thittam_docs/blob/main/docs/developers/adr/ADR-017-mermaid-architecture-diagrams.md)
 for rationale.
 
 ---
