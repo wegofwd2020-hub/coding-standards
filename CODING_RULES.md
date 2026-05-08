@@ -4,7 +4,7 @@
 > These are loaded into Claude Code via `~/.claude/CLAUDE.md` and apply
 > automatically regardless of which project you're working in.
 >
-> Last updated: 2026-04-21
+> Last updated: 2026-05-08
 
 ---
 
@@ -332,3 +332,80 @@ Convention-only for now — caught in code review. If drift recurs,
 add a CI spellchecker (`cspell` for code, `markdownlint` /
 `aspell` for docs) with a project-local exceptions dictionary for
 the unavoidable third-party terms.
+
+---
+
+## 20. Bind-Mount Source Into Dev Containers — Never `docker cp`
+
+Operator scripts (seeders, batch jobs, eval runners, ad-hoc CLIs) must
+read source from a read-only bind mount, not from a `docker cp` step
+into the container.
+
+**Wrong:**
+```bash
+docker cp scripts/* my-worker:/tmp/seed/
+docker compose exec my-worker python /tmp/seed/seed.py
+```
+
+**Right:**
+```yaml
+# docker-compose.yml
+services:
+  my-worker:
+    volumes:
+      - ./scripts:/app/scripts-repo:ro
+      - ./sample_content:/app/sample_content:ro
+```
+```bash
+docker compose exec -T my-worker python /app/scripts-repo/seed.py
+```
+
+**Why.** `docker cp` is invisible state — the container holds whatever
+was copied into it, not what's on disk. Subsequent runs forget what's
+been copied; stale files accumulate; reproducing a bug from someone
+else's terminal becomes guesswork. A read-only bind mount is
+self-healing: every run sees the current source, no copy step, no
+forgotten state. If the script needs writable scratch space, mount a
+named volume for that — never the source dir.
+
+**Exception.** Production images bake source at build time (correct).
+This rule covers *dev/test/CI containers* that exist to run operator
+scripts against the live source tree.
+
+---
+
+## 21. Migration Safety — Round-Trip on a Fresh DB Before Commit
+
+Every database migration (Alembic, sqlc/golang-migrate, raw SQL) must
+be tested with a full `downgrade → upgrade` cycle against a fresh
+database before it lands on `main`.
+
+Iterative drafts of a single migration are the high-risk case. While
+the migration is being shaped, intermediate states — RLS policies,
+ENUMs, CHECK constraints, indexes, materialized views — can be
+created on the dev DB and never get cleaned up by the shipped
+migration. Production replay then succeeds, but the table is in a
+state the shipped migration never modelled.
+
+**Required check before commit:**
+```bash
+# Python / Alembic
+alembic downgrade -1 && alembic upgrade head
+
+# Go / golang-migrate
+migrate -path db/migrations -database $DSN down 1 && \
+  migrate -path db/migrations -database $DSN up
+```
+
+If the migration involves RLS, run the round-trip against a database
+that already has rows in the affected table — empty-table migrations
+hide policy-ordering bugs.
+
+**Why.** Bugs caught here: orphan RLS policies on the wrong table,
+ENUM values that won't drop because columns still reference them,
+CHECK constraints leftover from a draft schema, materialized views
+holding indexes the new schema renamed. The canonical example is
+StudyBuddy migration 0046 (Epic 10 L-1): a debug draft enabled RLS
+on `curriculum_units` and `content_subject_versions` before being
+rewritten to `curricula`-only; the shipped migration didn't drop the
+orphans, requiring hotfix 0048.
