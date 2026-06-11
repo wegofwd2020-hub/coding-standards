@@ -4,7 +4,7 @@
 > These are loaded into Claude Code via `~/.claude/CLAUDE.md` and apply
 > automatically regardless of which project you're working in.
 >
-> Last updated: 2026-05-08
+> Last updated: 2026-06-11
 
 ---
 
@@ -409,3 +409,75 @@ StudyBuddy migration 0046 (Epic 10 L-1): a debug draft enabled RLS
 on `curriculum_units` and `content_subject_versions` before being
 rewritten to `curricula`-only; the shipped migration didn't drop the
 orphans, requiring hotfix 0048.
+
+---
+
+## 22. Every Repository Carries a LICENSE
+
+No repo ships without a top-level `LICENSE` file. Absence of a license is
+not "open by default" — it is legal ambiguity that blocks reuse, partnership,
+and acquisition diligence.
+
+- **Proprietary projects** (the default for WeGoFwd products): an explicit
+  "Copyright © <year> WeGoFwd2020. All Rights Reserved." notice with the
+  standard no-warranty clause. State how any personal data the software
+  processes is handled (reference `PRIVACY.md` / customer agreement) so the
+  license doesn't imply a data license.
+- **Intentionally shared** repos (e.g. `coding-standards`, sample code): a
+  named OSI license (MIT/Apache-2.0). Choosing "shared" is a deliberate act,
+  recorded in an ADR.
+
+Enforcement: a repo without `LICENSE` fails documentation review. The portfolio
+documentation audit (see `project-critique`) tracks coverage.
+
+---
+
+## 23. Sensitive-Data Products Require Privacy + Safety Docs Before Launch
+
+Any project that processes personal data about **children, students, patients,
+or other vulnerable users** — or that generates media/content consumed by them —
+must carry, before any public or pilot launch:
+
+1. `PRIVACY.md` (or a `compliance/` set) — what's collected, purpose, retention,
+   deletion, no-training on personal data, and the applicable regime
+   (COPPA, FERPA, HIPAA, GDPR/GDPR-K as relevant).
+2. A **content-safety** document where the product generates user-facing output
+   (what must / must not be produced, and how it's enforced in the pipeline).
+3. Data minimization and **verifiable deletion**, both backed by tests using
+   **synthetic mock data only** — never real personal data in fixtures.
+
+The privacy commitment is enforced in code (consent gating, retention jobs,
+hard-delete), not just documented. Examples: StudyBuddy (`studybuddy-docs/
+compliance/`), Kathai Chithiram (`PRIVACY.md`, `docs/CONTENT_SAFETY.md`).
+
+---
+
+## 24. Numbered ADRs for Every Significant Decision
+
+Rule #10 says "ADRs for architecture decisions" — this makes the convention
+uniform. Significant decisions are recorded as **sequentially numbered ADRs**
+(`docs/adr/ADR-NNN-short-title.md`) with the standard sections: Context,
+Decision, Status, Consequences. Prose "design notes" and "resolved decisions"
+documents are fine as working material but do not substitute for the numbered
+record once a decision is locked.
+
+Status values: `Proposed` → `Accepted` → (`Superseded by ADR-NNN`). Superseding,
+not editing, is how a decision changes. Every repo that holds decisions keeps
+its ADRs in one place so the decision history is greppable.
+
+---
+
+## 25. OpenSpec / OpenAPI Spec Per Service Boundary
+
+Every externally-callable API surface has a machine-readable specification
+checked into the docs repo, kept in sync with the implementation:
+
+- REST/JSON edges: an OpenAPI (OpenSpec-compatible) document per service.
+- gRPC services: the `.proto` is the contract; the generated REST gateway (if
+  any) also carries an OpenAPI doc.
+- Python services: OpenSpec-compliant docstrings on public functions remain
+  required (see project `CLAUDE.md`); the API spec is generated/derived from the
+  same source of truth where possible.
+
+The spec is part of the definition of done for an endpoint, not a follow-up.
+Documentation-drift enforcement (Rule #16) applies to specs too.
